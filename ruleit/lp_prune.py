@@ -1,16 +1,20 @@
-
+from rdkit import Chem as chem
+from rdkit.Chem import rdChemReactions as rdr
 from pulp import *
 
 def split_reaction_string(reaction):
-    reactants, products = reaction['smiles'].split('>>')
-    reactants = list(set(reactants.split('.')))
-    products = list(set(products.split('.')))
+    reaction = rdr.ReactionFromSmarts(reaction['smiles'], useSmiles=True)
+    #reactants, products = reaction['smiles'].split('>>')
+    reactants = list(map(chem.MolToInchiKey, reaction.GetReactants()))
+    products = list(map(chem.MolToInchiKey, reaction.GetProducts()))
     return reactants, products
 
 def extract_molecules(reactions):
     molecules = []
-    for r in reactions:
-        mr, mp = split_reaction_string(r)
+    for reaction in reactions:
+        mr, mp = reaction['smiles'].split('>>')
+        mr = mr.split('.')
+        mp = mp.split('.')
         for m in filter(lambda x: x not in molecules, mr + mp):
             molecules.append(m)
     return molecules
@@ -66,7 +70,7 @@ def formalize_problem(reactions, seeds, hits):
     
     reaction_dict = dict()
     out_reactions = dict()
-
+    hits = list(map(lambda x: chem.MolToInchiKey(chem.MolFromSmiles(x)), hits))
     for i, r in enumerate(reactions):
         idx = 'r{:06d}'.format(i)
         reaction_dict[idx] = LpVariable(idx, 0, None, LpContinuous)
@@ -77,6 +81,7 @@ def formalize_problem(reactions, seeds, hits):
         out_reactions[idx] = s
     for i, (m, r) in enumerate(zip(molecules, export_reactions)):
         idx = 'e{:06d}'.format(i)
+        m = chem.MolToInchiKey(chem.MolFromSmiles(m))
         if m in hits:
             reaction_dict[idx] = LpVariable(idx, 0.1, None, LpContinuous)
             out_reactions[idx] = r
@@ -89,6 +94,7 @@ def formalize_problem(reactions, seeds, hits):
 
 
     for m in molecules:
+        m = chem.MolToInchiKey(chem.MolFromSmiles(m))
         try:
             product_of = Mr[m]
         except KeyError:

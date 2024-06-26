@@ -8,12 +8,12 @@ class TestLP(unittest.TestCase):
 
         status, results = formalize_problem(
             reactions=[
-                {"smiles":"A>>B"},
-                {"smiles":"B>>C"},
-                {"smiles":"C>>D"},
-                {"smiles":"C>>E"}
-            ], seeds=["A"],
-            hits=["D"]
+                {"smiles":"C>>CC"},
+                {"smiles":"CC>>CCC"},
+                {"smiles":"CCC>>CCN"},
+                {"smiles":"CCC>>CCCC"}
+            ], seeds=["C"],
+            hits=["CCN"]
         )
         self.assertEqual(results['r000000']['active'], True)
         self.assertEqual(results['r000001']['active'], True)
@@ -24,23 +24,20 @@ class TestLP(unittest.TestCase):
 
         status, results = formalize_problem(
             reactions=[
-                {"smiles":"A>>B"},
-                {"smiles":"B>>C"},
-                {"smiles":"C>>D"},
-                {"smiles":"C>>E"},
-                {"smiles":"E.A>>F"},
-                {"smiles":"A.A>>G"},
+                {"smiles":"C(O)=O>>CC"},
+                {"smiles":"CC>>CCC"},
+                {"smiles":"CCC>>CCN"},
+                {"smiles":"CCC>>CCCC"}
 
-            ], seeds=[],
-            hits=["G"]
+            ], seeds=["OC=O"],
+            hits=["NCC", "CCCC"]
         )
         if status == 1:
-            self.assertEqual(results['r000000']['active'], False)
-            self.assertEqual(results['r000001']['active'], False)
-            self.assertEqual(results['r000002']['active'], False)
-            self.assertEqual(results['r000003']['active'], False)
-            self.assertEqual(results['r000004']['active'], False)
-            self.assertEqual(results['r000005']['active'], False)
+            self.assertEqual(results['r000000']['active'], True)
+            self.assertEqual(results['r000001']['active'], True)
+            self.assertEqual(results['r000002']['active'], True)
+            self.assertEqual(results['r000003']['active'], True)
+            
         else:
             self.assertEqual(status, -1)
 
@@ -48,31 +45,23 @@ class TestLP(unittest.TestCase):
 
         status, results = formalize_problem(
             reactions=[
-                {"smiles":"A>>B"},
-                {"smiles":"B>>C"},
-                {"smiles":"C>>D"},
-                {"smiles":"C>>E"},
-                {"smiles":"E.A>>F"},
-                {"smiles":"A.A>>G"},
+                {"smiles": "CC=O.CC=O>>CC(O)CC=O"},
+                {"smiles":"CC=O.CC(O)CC=O>>CC(O)C(C=O)C(C)O"}
 
-            ], seeds=["A"],
-            hits=["G", "F"]
+            ], seeds=["CC=O"],
+            hits=["CC(O)C(C=O)C(O)C"]
         )
         self.assertEqual(results['r000000']['active'], True)
         self.assertEqual(results['r000001']['active'], True)
-        self.assertEqual(results['r000002']['active'], False)
-        self.assertEqual(results['r000003']['active'], True)
-        self.assertEqual(results['r000004']['active'], True)
-        self.assertEqual(results['r000005']['active'], True)
-
+        
     def test_lp_prune_4(self):
 
         status, results = formalize_problem(
             reactions=[
                 {"smiles": "CC=O.CC=O>>CC(O)CC=O"},
-                {"smiles": "C=O.C=O>>C=O=CO"}
+                {"smiles": "C=O.C=O>>CCCO"}
             ], seeds=["C=O", "C=O"],
-            hits=["C=O=CO"]
+            hits=["CCCO"]
         )
         self.assertEqual(status, 1)
         self.assertEqual(results['r000001']['active'], True)
@@ -82,9 +71,9 @@ class TestLP(unittest.TestCase):
         status, results = formalize_problem(
             reactions=[
                 {"smiles": "CC=O.CC=O>>CC(O)CC=O"},
-                {"smiles":"C=O.C=O>>C=O=CO"}
+                {"smiles":"C=O.C=O>>CCO"}
             ], seeds=["N", "S"],
-            hits=["C=O=CO"]
+            hits=["CCO"]
         )
         self.assertEqual(status, -1)
         
