@@ -159,21 +159,35 @@ class MoleculeBuffer:
                     print("unable to process {:s} match".format(smiles))
                     continue
         else:
-            return None
+            return []
         return out
  
     
 def process_molecule_collection(collection, local_mol_db: MoleculeBuffer):
     molecule_dump = []
     stoich_dictionary = dict()
-
+    unmatched_smiles = dict()
+    unmatched_index = 0
     for mol in collection:
         
         smiles = chem.MolToSmiles(mol)
         try:
             m = local_mol_db.query(smiles)[0]
-        except IndexError:
-            raise RuntimeError(f"Unable to find a match for '{smiles}'")
+        except (IndexError, ValueError, IOError):
+            try:
+                key = unmatched_smiles[smiles]
+            except KeyError:
+                unmatched_smiles[smiles] = f'u{unmatched_index:06d}'
+                unmatched_index += 1
+                key = unmatched_smiles[smiles]
+
+            m = dict(
+                smiles=smiles,
+                inchi="", inchikey="", title=smiles,
+                formula="",
+                cid="", mw="", key=key
+            )
+        
         molecule_dump.append(m)
         try:
             stoich_dictionary[m['key']] += 1

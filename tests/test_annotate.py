@@ -1,6 +1,7 @@
 import unittest
 from ruleit.annotate import MoleculeBuffer, annotate_reaction_collection, generate_crn
-import duckdb
+import json
+import random
 
 
 class TestAnnotate(unittest.TestCase):
@@ -78,6 +79,15 @@ class TestAnnotate(unittest.TestCase):
         molecules, links = annotate_reaction_collection(reactions, mb)
         G = generate_crn(reactions, molecules, links)
         self.assertEqual(G.number_of_nodes(), 6)
+
+    def test_large_network(self):
+        mb = MoleculeBuffer(file="tests/mol-buffer.db")
+        mb.create_table(overwrite=True)
+        with open('tests/expansion-2it.json', 'r') as f:
+            reactions = json.load(f)['reactions']
+        # random.shuffle(reactions)
+        molecules, links = annotate_reaction_collection(reactions[:50], mb)
+        
 
 
 if __name__ == "__main__":
