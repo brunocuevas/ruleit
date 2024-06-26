@@ -49,7 +49,7 @@ As this number grows very fast, we are limiting it to three iterations.
 
 """
 
-n_iterations = st.number_input('number_iterations', value=3)
+n_iterations = st.number_input('number_iterations', value=4)
 
 """
 Next, we need the reaction rules. Reaction rules can become quite 'mind-bending', we are aware. That is why we
@@ -98,12 +98,14 @@ if st.button('process'):
     """Performing the network expansion"""
     expansion_metrics = []
     for i in range(n_iterations):
-        out = _expansion(seeds, dict(reactions=reaction_rules))
+        out = _expansion(seeds, dict(reactions=reaction_rules), max_reactions=1000)
         seeds = out['discovered-molecules']
         out['discovered-reactions'] = _prune(out['discovered-reactions'])
         expansion_metrics.append(
             {"iteration": i, "#seeds": len(out['discovered-molecules']), "#reactions": len(out['discovered-reactions'])}
         )
+        # if len(out['discovered-reactions']) >= 1000:
+        #     break
 
 
     col1, col2 = st.columns(2)
@@ -118,11 +120,15 @@ if st.button('process'):
     col2.metric("Number of reactions", len(out['discovered-reactions']))
 
     
+    num_reactions = min(1000, len(out['discovered-reactions']))
+
+    if num_reactions == 1000:
+        st.warning("truncating the number of reactions to 1000")
 
     outfile = dict(
         rules=reaction_rules, 
         seeds=seeds,
-        reactions=out['discovered-reactions']
+        reactions=out['discovered-reactions'][:num_reactions]
     )
 
     col1, col2, col3 = st.columns(3)

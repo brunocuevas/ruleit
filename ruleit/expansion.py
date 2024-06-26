@@ -16,7 +16,7 @@ def generate_smiles(s, p):
     )
 
 
-def _expansion(seeds, reaction_rules):
+def _expansion(seeds, reaction_rules, max_reactions=1000):
     """
 
     It performs a simple single iteration update of the
@@ -70,6 +70,12 @@ def _expansion(seeds, reaction_rules):
                         discovered_substrates.append(
                             chem.MolToSmiles(m)
                         )
+                    if idx >= max_reactions:
+                        print("max reactions reached")
+                        output['discovered-molecules'] = discovered_substrates
+                        output['discovered-reactions'] = discovered_reactions
+                        return output
+                    
     
     output['discovered-molecules'] = discovered_substrates
     output['discovered-reactions'] = discovered_reactions
