@@ -76,7 +76,33 @@ class TestLP(unittest.TestCase):
             hits=["CCO"]
         )
         self.assertEqual(status, -1)
-        
+    
+
+    def test_prune_real_network_1(self):
+
+        with open('tests/expansion-1.json') as f:
+            u = json.load(f)
+
+        status, results = formalize_problem(
+            reactions=u['reactions'],
+            seeds=[
+                "CC(=O)O", "C(=O)O", "CO", "N", "NO", "OS(=O)(=O)O", "OP(=O)(O)O", "C(=O)(O)O", "S"
+            ], hits=["O=COC=O", "OC(O)S"]
+        )
+        self.assertEqual(status, 1)
+
+    def test_prune_real_network_2(self):
+
+        with open('tests/expansion-all.json') as f:
+            u = json.load(f)
+
+        status, results = formalize_problem(
+            reactions=u['reactions'],
+            seeds=[
+                "CC(=O)O", "C(=O)O", "CO", "N", "NO", "OS(=O)(=O)O", "OP(=O)(O)O", "C(=O)(O)O", "S"
+            ], hits=["CC(O)(CC(=O)O)O=C(O)C(C(O)(O)O)C(O)(O)O"]
+        )
+        self.assertEqual(status, 1)
 
 if __name__ == "__main__":
     unittest.main()

@@ -39,7 +39,7 @@ class MoleculeBuffer:
         self.__transaction__(
             """
             CREATE TABLE molecules (
-                key INTEGER, smiles STRING, inchi STRING, 
+                key STRING, smiles STRING, inchi STRING, 
                 inchikey STRING, title STRING, 
                 cid INTEGER,
                 mw FLOAT, formula STRING
@@ -52,9 +52,10 @@ class MoleculeBuffer:
     def new_index(self):
         try:
             u = self.__transaction__("SELECT key FROM molecules")# .fetchall()
-            return max([item[0] for item in u]) + 1
+            n = max([int(item[0][1:]) for item in u]) + 1
+            return 'm{:06d}'.format(n)
         except ValueError:
-            return 0
+            return 'm000000'
 
 
     @staticmethod
@@ -177,7 +178,7 @@ def process_molecule_collection(collection, local_mol_db: MoleculeBuffer):
             try:
                 key = unmatched_smiles[smiles]
             except KeyError:
-                unmatched_smiles[smiles] = f'u{unmatched_index:06d}'
+                unmatched_smiles[smiles] = f'{unmatched_index:d}'
                 unmatched_index += 1
                 key = unmatched_smiles[smiles]
 
@@ -251,6 +252,6 @@ def generate_crn(reactions, molecules, links):
     G.add_nodes_from([(r['reaction_id'], r) for r in reactions])
     G.add_nodes_from(list(molecules.items()))
     
-    links = [(l.split(':')[0], int(l.split(':')[1]), data) for l, data in links.items()]
+    links = [(l.split(':')[0], l.split(':')[1], data) for l, data in links.items()]
     G.add_edges_from(links)
     return G

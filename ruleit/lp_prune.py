@@ -70,7 +70,7 @@ def formalize_problem(reactions, seeds, hits):
     
     reaction_dict = dict()
     out_reactions = dict()
-    hits = list(map(lambda x: chem.MolToInchiKey(chem.MolFromSmiles(x)), hits))
+    hits = list(map(lambda x: chem.MolToInchiKey(chem.MolFromSmiles(x, sanitize=False)), hits))
     for i, r in enumerate(reactions):
         idx = 'r{:06d}'.format(i)
         reaction_dict[idx] = LpVariable(idx, 0, None, LpContinuous)
@@ -81,7 +81,9 @@ def formalize_problem(reactions, seeds, hits):
         out_reactions[idx] = s
     for i, (m, r) in enumerate(zip(molecules, export_reactions)):
         idx = 'e{:06d}'.format(i)
-        m = chem.MolToInchiKey(chem.MolFromSmiles(m))
+        
+        m = chem.MolToInchiKey(chem.MolFromSmiles(m, sanitize=False))
+        
         if m in hits:
             reaction_dict[idx] = LpVariable(idx, 0.1, None, LpContinuous)
             out_reactions[idx] = r
@@ -94,7 +96,7 @@ def formalize_problem(reactions, seeds, hits):
 
 
     for m in molecules:
-        m = chem.MolToInchiKey(chem.MolFromSmiles(m))
+        m = chem.MolToInchiKey(chem.MolFromSmiles(m, sanitize=False))
         try:
             product_of = Mr[m]
         except KeyError:

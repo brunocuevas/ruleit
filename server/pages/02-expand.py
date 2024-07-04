@@ -98,7 +98,7 @@ if st.button('process'):
     """Performing the network expansion"""
     expansion_metrics = []
     for i in range(n_iterations):
-        out = _expansion(seeds, dict(reactions=reaction_rules), max_reactions=1000)
+        out = _expansion(seeds, dict(reactions=reaction_rules), max_reactions=10000)
         seeds = out['discovered-molecules']
         out['discovered-reactions'] = _prune(out['discovered-reactions'])
         expansion_metrics.append(

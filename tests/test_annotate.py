@@ -15,12 +15,12 @@ class TestAnnotate(unittest.TestCase):
         u = mb.query("CCO")
         u = mb.query("CCO")
         self.assertEqual(len(u), 1)
-        self.assertEqual(u[0]['key'], 0)
+        self.assertEqual(u[0]['key'], 'm000000')
 
 
         u = mb.query("NCCO")
         self.assertEqual(len(u), 1)
-        self.assertEqual(u[0]['key'], 1)
+        self.assertEqual(u[0]['key'], 'm000001')
 
     def test_annotate_collection(self):
         mb = MoleculeBuffer(file="tests/mol-buffer.db")
@@ -40,9 +40,9 @@ class TestAnnotate(unittest.TestCase):
         aldehyde = mb.query("CC=O")
         carboxyl = mb.query("CC(=O)O")
 
-        self.assertEqual(alcohol[0]['key'], 0)
-        self.assertEqual(aldehyde[0]['key'], 1)
-        self.assertEqual(carboxyl[0]['key'], 3)
+        self.assertEqual(alcohol[0]['key'], 'm000000')
+        self.assertEqual(aldehyde[0]['key'], 'm000001')
+        self.assertEqual(carboxyl[0]['key'], 'm000003')
 
 
         self.assertEqual(len(molecules.keys()), 4)
@@ -88,6 +88,22 @@ class TestAnnotate(unittest.TestCase):
         # random.shuffle(reactions)
         molecules, links = annotate_reaction_collection(reactions[:50], mb)
         
+    def test_large_network_2(self):
+        mb = MoleculeBuffer(file="tests/mol-buffer.db")
+        mb.create_table(overwrite=True)
+        with open('tests/expansion-1.json', 'r') as f:
+            reactions = json.load(f)['reactions']
+        # random.shuffle(reactions)
+        molecules, links = annotate_reaction_collection(reactions[:50], mb)
+
+    def test_large_network_3(self):
+        mb = MoleculeBuffer(file="tests/mol-buffer.db")
+        mb.create_table(overwrite=True)
+        with open('tests/pruned-expansion-all.json', 'r') as f:
+            reactions = json.load(f)['reactions']
+        # random.shuffle(reactions)
+        molecules, links = annotate_reaction_collection(reactions, mb)
+        crn = generate_crn(reactions, molecules, links)
 
 
 if __name__ == "__main__":

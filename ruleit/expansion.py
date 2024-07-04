@@ -72,12 +72,12 @@ def _expansion(seeds, reaction_rules, max_reactions=1000):
                         )
                     if idx >= max_reactions:
                         print("max reactions reached")
-                        output['discovered-molecules'] = discovered_substrates
+                        output['discovered-molecules'] = _prune_molecules(discovered_substrates)
                         output['discovered-reactions'] = discovered_reactions
                         return output
                     
     
-    output['discovered-molecules'] = discovered_substrates
+    output['discovered-molecules'] = _prune_molecules(discovered_substrates)
     output['discovered-reactions'] = discovered_reactions
 
     return output
@@ -90,4 +90,12 @@ def _prune(discovered_reactions):
         if r['smiles'] not in index:
             out.append(r)
             index.append(r['smiles'])
+    return out
+
+def _prune_molecules(discovered_molecules):
+    out = []
+    for mol in discovered_molecules:
+        if mol not in out:
+            out.append(mol)
+    out.sort(key=len)
     return out
