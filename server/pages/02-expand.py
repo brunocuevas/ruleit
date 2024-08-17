@@ -1,4 +1,4 @@
-from ruleit.expansion import _expansion, _prune
+from ruleit.expansion import _expansion, _prune, probablistic_expansion
 import streamlit as st 
 from rdkit.Chem import rdChemReactions as rdr
 from rdkit.Chem import Draw
@@ -86,6 +86,8 @@ introduce, this step can be either instantaneously or take forever.
 
 """
 
+number_iterations = st.slider("number_iterations", min_value=1000, max_value=50000, value=10000, step=1000)
+
 
 if st.button('process'):
     
@@ -98,15 +100,21 @@ if st.button('process'):
     """Performing the network expansion"""
     expansion_metrics = []
     for i in range(n_iterations):
-        out = _expansion(seeds, dict(reactions=reaction_rules), max_reactions=10000)
+        out = probablistic_expansion(
+            seeds, 
+            dict(reactions=reaction_rules), 
+            rule_probability=np.ones(len(reaction_rules)) / len(reaction_rules), 
+            iterations=number_iterations
+        )
         seeds = out['discovered-molecules']
         out['discovered-reactions'] = _prune(out['discovered-reactions'])
         expansion_metrics.append(
             {"iteration": i, "#seeds": len(out['discovered-molecules']), "#reactions": len(out['discovered-reactions'])}
         )
-        # if len(out['discovered-reactions']) >= 1000:
-        #     break
 
+    reactions = pd.DataFrame.from_records(out['discovered-reactions'])
+    reaction_counts = reactions.groupby('rule', as_index=False).count().rename(columns={'smiles':'#number-reactions'})
+    st.bar_chart(data=reaction_counts, x='rule', y='#number-reactions')
 
     col1, col2 = st.columns(2)
     col1.bar_chart(
