@@ -49,7 +49,9 @@ As this number grows very fast, we are limiting it to three iterations.
 
 """
 
-n_iterations = st.number_input('number_iterations', value=4)
+col1, col2 = st.columns(2)
+n_expansions = col1.slider('# expansion iterations', value=4, min_value=1, max_value=5)
+iterations_per_expansion = col2.slider("# number reactions per expansion", min_value=1000, max_value=50000, value=10000, step=1000)
 
 """
 Next, we need the reaction rules. Reaction rules can become quite 'mind-bending', we are aware. That is why we
@@ -86,25 +88,25 @@ introduce, this step can be either instantaneously or take forever.
 
 """
 
-number_iterations = st.slider("number_iterations", min_value=1000, max_value=50000, value=10000, step=1000)
 
 
 if st.button('process'):
     
     st.header("Results")
     st.divider()
+
     reaction_rules = reaction_rules.split('\n')
     seeds = seeds.split('\n')
     reaction_rules = [dict(name='r{:06d}'.format(i), smarts=r) for i, r in enumerate(reaction_rules)]
 
     """Performing the network expansion"""
     expansion_metrics = []
-    for i in range(n_iterations):
+    for i in range(n_expansions):
         out = probablistic_expansion(
             seeds, 
             dict(reactions=reaction_rules), 
             rule_probability=np.ones(len(reaction_rules)) / len(reaction_rules), 
-            iterations=number_iterations
+            iterations=iterations_per_expansion
         )
         seeds = out['discovered-molecules']
         out['discovered-reactions'] = _prune(out['discovered-reactions'])
@@ -114,6 +116,16 @@ if st.button('process'):
 
     reactions = pd.DataFrame.from_records(out['discovered-reactions'])
     reaction_counts = reactions.groupby('rule', as_index=False).count().rename(columns={'smiles':'#number-reactions'})
+
+    outfile = dict(
+        rules=reaction_rules, 
+        seeds=seeds,
+        reactions=out['discovered-reactions']
+    )
+
+    
+    st.download_button(label='Download', data=json.dumps(outfile, indent=4), file_name='expansion.json', type="primary")
+
     st.bar_chart(data=reaction_counts, x='rule', y='#number-reactions')
 
     col1, col2 = st.columns(2)
@@ -128,19 +140,6 @@ if st.button('process'):
     col2.metric("Number of reactions", len(out['discovered-reactions']))
 
     
-    num_reactions = min(1000, len(out['discovered-reactions']))
-
-    if num_reactions == 1000:
-        st.warning("truncating the number of reactions to 1000")
-
-    outfile = dict(
-        rules=reaction_rules, 
-        seeds=seeds,
-        reactions=out['discovered-reactions'][:num_reactions]
-    )
-
-    col1, col2, col3 = st.columns(3)
-    col2.download_button(label='Download', data=json.dumps(outfile, indent=4), file_name='expansion.json')
     st.divider()
     """
     Some of the reactions found in the expansion

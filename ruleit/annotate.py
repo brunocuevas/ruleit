@@ -131,7 +131,7 @@ class MoleculeBuffer:
 
 
     @staticmethod
-    def query_pubchem(smiles):
+    def query_pubchem(q, use='smiles'):
         """
         
 
@@ -142,8 +142,8 @@ class MoleculeBuffer:
         url: str
             URL. It must have a single placeholder to place the query.
         """
-        url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{:s}/property/CanonicalSMILES,Title,MolecularFormula,InChI,InChIKey,MolecularWeight/json?MaxRecords=5"
-        url = urllib.parse.quote(url.format(smiles), safe=':/,?=')
+        url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/{:s}/{:s}/property/CanonicalSMILES,Title,MolecularFormula,InChI,InChIKey,MolecularWeight/json?MaxRecords=5"
+        url = urllib.parse.quote(url.format(use, q), safe=':/,?=')
         r = requests.get(url)
         out = []
         if r.status_code == 200:
@@ -157,7 +157,7 @@ class MoleculeBuffer:
                         cid=mol['CID'], mw=mol['MolecularWeight'],
                     ))
                 except KeyError:
-                    print("unable to process {:s} match".format(smiles))
+                    print("unable to process {:s} match".format(q))
                     continue
         else:
             return []

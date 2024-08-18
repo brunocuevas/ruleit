@@ -1,6 +1,7 @@
 import unittest
-from ruleit.expansion import _expansion
+from ruleit.expansion import _expansion, probablistic_expansion
 from yaml import Loader, Dumper, load, dump
+import numpy as np
 
 
 class TestFactory(unittest.TestCase):
@@ -30,6 +31,19 @@ class TestFactory(unittest.TestCase):
             u = _expansion(f, g, 10000)
             f = u['discovered-molecules']
         # self.assertEqual(len(u['discovered-reactions']), 1000)
+
+    def test_probabilistic_expansion(self):
+        f = list(map(lambda x: x.strip(), open('tests/seeds.txt').readlines()))
+        g = load(open('tests/reaction-rules.yaml'), Loader)
+        p = np.array([0.25, 0.25, 0.25, 0.25])
+        
+        u = probablistic_expansion(f, g, rule_probability=p, iterations=1000)
+        px = len(list(filter(lambda x: x['rule'] == 'Isomerization', u['discovered-reactions']))) / len(u['discovered-reactions'])
+        print("---")
+
+        u = probablistic_expansion(f, g, rule_probability=p, iterations=10000)
+        px = len(list(filter(lambda x: x['rule'] == 'Isomerization', u['discovered-reactions']))) / len(u['discovered-reactions'])
+        print("---")
 
 
 
