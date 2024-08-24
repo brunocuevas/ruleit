@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-from ruleit.lp_prune import formalize_problem
+from ruleit.lp_prune import lp_prune, filter_hits
 from pulp import *
 import pandas as pd
 from io import StringIO, BytesIO
@@ -31,16 +31,25 @@ v = st.text_area(label="seeds")
 st.markdown("Introduce a SMILES list of the detected compounds")
 w = st.text_area(label="hits")
 
-if u and v:
+go_for_it = st.button('Go!')
+
+if u and v and w and go_for_it:
 
     u = json.load(u)
     v = [line.strip() for line in v.split('\n')]
     w = [line.strip() for line in w.split('\n')]
 
-    status, results = formalize_problem(
+    pruned_hits = filter_hits(reactions=u['reactions'], hits=w)
+    pruned_hits = [p['smiles'] for p in pruned_hits]
+
+    st.metric(
+        label="Number Hits", value=len(pruned_hits)
+    )
+
+    status, results = lp_prune(
         reactions=u['reactions'],
         seeds=v, 
-        hits=w
+        hits=pruned_hits
     )
     if status == 1:
         results = dict((key, item) for key, item in filter(lambda x: x[0][0] == 'r', results.items()))
@@ -61,4 +70,3 @@ if u and v:
 # for v in prob.variables():
 #     print(v.name, v.varValue)
     
-

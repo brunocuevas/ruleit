@@ -104,7 +104,7 @@ def _prune_molecules(discovered_molecules):
     out.sort(key=len)
     return out
 
-def probablistic_expansion(seeds, reaction_rules_copy, rule_probability, iterations=1000):
+def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1000):
     """
 
     Performs a probablistic expansion, where the rule_probability parameters
@@ -115,7 +115,7 @@ def probablistic_expansion(seeds, reaction_rules_copy, rule_probability, iterati
     """
 
     reaction_rules_copy = dict(
-        reactions=[r.copy() for r in reaction_rules_copy['reactions']]
+        reactions=[r.copy() for r in reaction_rules['reactions']]
     )
     seeds = list(map(lambda x: x.strip(), seeds))
     seeds = list(set(seeds))
@@ -192,3 +192,36 @@ def probablistic_expansion(seeds, reaction_rules_copy, rule_probability, iterati
     
 
     return output
+
+
+def iterative_probabilistic_expansion(seeds, reaction_rules, iterations, rounds):
+    for i in range(rounds):
+        current_expansion = probablistic_expansion(
+            seeds, reaction_rules=dict(reactions=reaction_rules),
+            rule_probability=np.ones(len(reaction_rules)) / len(reaction_rules), 
+            iterations=iterations
+        )
+        
+        try:
+            out['discovered-reactions'] = _prune(out['discovered-reactions'] + current_expansion['discovered-reactions'])
+            out['discovered-molecules'] = current_expansion['discovered-molecules']
+            
+        except NameError:
+            out = current_expansion
+            out['discovered-reactions'] = _prune(out['discovered-reactions'])
+
+        seeds = out['discovered-molecules']
+
+        nr = len(out['discovered-reactions'])
+        nm = len(out['discovered-molecules'])
+        print(nr, nm)
+
+    for i, reaction in enumerate(out['discovered-reactions']):
+        reaction['reaction_id'] = f'r{i:06d}'
+    
+    output_content = dict(
+        rules=reaction_rules, 
+        seeds=seeds,
+        reactions=out['discovered-reactions']
+    )
+    return output_content

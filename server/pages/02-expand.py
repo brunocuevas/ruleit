@@ -1,4 +1,4 @@
-from ruleit.expansion import _expansion, _prune, probablistic_expansion
+from ruleit.expansion import iterative_probabilistic_expansion
 import streamlit as st 
 from rdkit.Chem import rdChemReactions as rdr
 from rdkit.Chem import Draw
@@ -99,45 +99,25 @@ if st.button('process'):
     seeds = seeds.split('\n')
     reaction_rules = [dict(name='r{:06d}'.format(i), smarts=r) for i, r in enumerate(reaction_rules)]
 
-    """Performing the network expansion"""
-    expansion_metrics = []
-    for i in range(n_expansions):
-        out = probablistic_expansion(
-            seeds, 
-            dict(reactions=reaction_rules), 
-            rule_probability=np.ones(len(reaction_rules)) / len(reaction_rules), 
-            iterations=iterations_per_expansion
-        )
-        seeds = out['discovered-molecules']
-        out['discovered-reactions'] = _prune(out['discovered-reactions'])
-        expansion_metrics.append(
-            {"iteration": i, "#seeds": len(out['discovered-molecules']), "#reactions": len(out['discovered-reactions'])}
-        )
-
-    reactions = pd.DataFrame.from_records(out['discovered-reactions'])
+    outfile = iterative_probabilistic_expansion(seeds=seeds, reaction_rules=reaction_rules, iterations=iterations_per_expansion, rounds=n_expansions)
+    reactions = pd.DataFrame.from_records(outfile['reactions'])
     reaction_counts = reactions.groupby('rule', as_index=False).count().rename(columns={'smiles':'#number-reactions'})
-
-    outfile = dict(
-        rules=reaction_rules, 
-        seeds=seeds,
-        reactions=out['discovered-reactions']
-    )
 
     
     st.download_button(label='Download', data=json.dumps(outfile, indent=4), file_name='expansion.json', type="primary")
 
     st.bar_chart(data=reaction_counts, x='rule', y='#number-reactions')
 
+    # col1, col2 = st.columns(2)
+    # col1.bar_chart(
+    #     data=pd.DataFrame.from_records(expansion_metrics), x='iteration', y="#reactions"
+    # )
+    # col2.bar_chart(
+    #     data=pd.DataFrame.from_records(expansion_metrics), x='iteration', y="#seeds"
+    # )
     col1, col2 = st.columns(2)
-    col1.bar_chart(
-        data=pd.DataFrame.from_records(expansion_metrics), x='iteration', y="#reactions"
-    )
-    col2.bar_chart(
-        data=pd.DataFrame.from_records(expansion_metrics), x='iteration', y="#seeds"
-    )
-    col1, col2 = st.columns(2)
-    col1.metric("Number of compounds", len(out['discovered-molecules']))
-    col2.metric("Number of reactions", len(out['discovered-reactions']))
+    col1.metric("Number of compounds", len(outfile['seeds']))
+    col2.metric("Number of reactions", len(outfile['reactions']))
 
     
     st.divider()
@@ -145,7 +125,7 @@ if st.button('process'):
     Some of the reactions found in the expansion
     """    
 
-    display_reactions = out['discovered-reactions'][:10]
+    display_reactions = outfile['reactions'][:10]
 
     st.divider()
 
