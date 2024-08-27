@@ -8,6 +8,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import random
 
 
 
@@ -49,9 +50,10 @@ As this number grows very fast, we are limiting it to three iterations.
 
 """
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 n_expansions = col1.slider('# expansion iterations', value=4, min_value=1, max_value=5)
 iterations_per_expansion = col2.slider("# number reactions per expansion", min_value=1000, max_value=50000, value=10000, step=1000)
+maximum_mass = col3.slider('maximum mass', value=500, min_value=250, max_value=1000)
 
 """
 Next, we need the reaction rules. Reaction rules can become quite 'mind-bending', we are aware. That is why we
@@ -88,6 +90,14 @@ introduce, this step can be either instantaneously or take forever.
 
 """
 
+conditions = dict(
+    mass=maximum_mass,
+    valence=dict(
+        C=[4],
+        N=[3],
+        O=[2]
+    )
+)
 
 
 if st.button('process'):
@@ -99,7 +109,14 @@ if st.button('process'):
     seeds = seeds.split('\n')
     reaction_rules = [dict(name='r{:06d}'.format(i), smarts=r) for i, r in enumerate(reaction_rules)]
 
-    outfile = iterative_probabilistic_expansion(seeds=seeds, reaction_rules=reaction_rules, iterations=iterations_per_expansion, rounds=n_expansions)
+    outfile = iterative_probabilistic_expansion(
+        seeds=seeds, 
+        reaction_rules=reaction_rules, 
+        iterations=iterations_per_expansion, 
+        rounds=n_expansions, 
+        conditions=conditions
+    )
+
     reactions = pd.DataFrame.from_records(outfile['reactions'])
     reaction_counts = reactions.groupby('rule', as_index=False).count().rename(columns={'smiles':'#number-reactions'})
 
@@ -108,13 +125,13 @@ if st.button('process'):
 
     st.bar_chart(data=reaction_counts, x='rule', y='#number-reactions')
 
-    # col1, col2 = st.columns(2)
-    # col1.bar_chart(
-    #     data=pd.DataFrame.from_records(expansion_metrics), x='iteration', y="#reactions"
-    # )
-    # col2.bar_chart(
-    #     data=pd.DataFrame.from_records(expansion_metrics), x='iteration', y="#seeds"
-    # )
+    col1, col2 = st.columns(2)
+    col1.bar_chart(
+        data=pd.DataFrame.from_records(outfile['metrics']), x='iteration', y="n_reactions"
+    )
+    col2.bar_chart(
+        data=pd.DataFrame.from_records(outfile['metrics']), x='iteration', y="n_molecules"
+    )
     col1, col2 = st.columns(2)
     col1.metric("Number of compounds", len(outfile['seeds']))
     col2.metric("Number of reactions", len(outfile['reactions']))
@@ -124,8 +141,9 @@ if st.button('process'):
     """
     Some of the reactions found in the expansion
     """    
-
-    display_reactions = outfile['reactions'][:10]
+    display_reactions = outfile['reactions'].copy()
+    random.shuffle(display_reactions)
+    display_reactions = display_reactions[:10]
 
     st.divider()
 

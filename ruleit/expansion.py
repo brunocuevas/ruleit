@@ -1,9 +1,12 @@
 import yaml
 from rdkit.Chem import rdChemReactions as rdr
+from rdkit.Chem import AllChem as achem
 from rdkit import Chem as chem
+from rdkit.Chem.Descriptors import MolWt
 import itertools
 import numpy as np
 from random import shuffle
+
 
 
 def cartessian_product(seed_set, n):
@@ -104,7 +107,7 @@ def _prune_molecules(discovered_molecules):
     out.sort(key=len)
     return out
 
-def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1000):
+def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1000, conditions=None):
     """
 
     Performs a probablistic expansion, where the rule_probability parameters
@@ -173,6 +176,10 @@ def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1
 
         if len(p) > 0:
             for batch in p:
+                if conditions is not None:
+                    if not safety_check(batch, conditions=conditions):
+                        continue
+
                 discovered_reactions.append(
                     dict(
                         smiles=generate_smiles(s, batch),
@@ -185,7 +192,9 @@ def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1
                     discovered_substrates.append(
                         chem.MolToSmiles(m)
                     )
-        
+
+
+
     output['discovered-molecules'] = _prune_molecules(discovered_substrates)
     output['discovered-reactions'] = discovered_reactions
 
@@ -194,12 +203,14 @@ def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1
     return output
 
 
-def iterative_probabilistic_expansion(seeds, reaction_rules, iterations, rounds):
+def iterative_probabilistic_expansion(seeds, reaction_rules, iterations, rounds, conditions=None):
+    expansion_metrics = []
     for i in range(rounds):
         current_expansion = probablistic_expansion(
             seeds, reaction_rules=dict(reactions=reaction_rules),
             rule_probability=np.ones(len(reaction_rules)) / len(reaction_rules), 
-            iterations=iterations
+            iterations=iterations,
+            conditions=conditions
         )
         
         try:
@@ -214,7 +225,10 @@ def iterative_probabilistic_expansion(seeds, reaction_rules, iterations, rounds)
 
         nr = len(out['discovered-reactions'])
         nm = len(out['discovered-molecules'])
-        print(nr, nm)
+
+        expansion_metrics.append(
+            dict(iteration=i, n_reactions = nr, n_molecules = nm)
+        )
 
     for i, reaction in enumerate(out['discovered-reactions']):
         reaction['reaction_id'] = f'r{i:06d}'
@@ -222,6 +236,53 @@ def iterative_probabilistic_expansion(seeds, reaction_rules, iterations, rounds)
     output_content = dict(
         rules=reaction_rules, 
         seeds=seeds,
-        reactions=out['discovered-reactions']
+        reactions=out['discovered-reactions'],
+        metrics=expansion_metrics
     )
     return output_content
+
+
+def safety_check(products, conditions):
+    for product in products:
+        product = chem.MolFromInchi(chem.MolToInchi(product))
+        if product is None:
+            return False
+        cv = check_valence(product, conditions)
+        cm = check_mass(product, conditions)
+        if cv and cm:
+            continue
+        else:
+            return False
+    return True
+
+def check_valence(molecule, conditions):
+    # chem.SanitizeMol(molecule)
+    
+    for atom in molecule.GetAtoms():
+
+        try:
+            valence = atom.GetTotalValence()
+        except RuntimeError:
+            return False
+        
+        symbol = atom.GetSymbol()
+        
+        try:
+            allowed_valence = conditions['valence'][symbol] 
+        except KeyError:
+            continue
+
+        if not (valence in allowed_valence):
+            return False
+        
+    return True
+
+def check_mass(molecule, conditions):
+    try:
+        mw = MolWt(molecule)
+    except RuntimeError:
+        return False
+    if mw > conditions['mass']:
+        return False
+    else:
+        return True

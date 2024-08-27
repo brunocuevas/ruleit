@@ -13,7 +13,7 @@ st.sidebar.success("Select a demo above.")
 st.markdown(
     """
     Wellcome to Rule-It! This platform was created by Bruno Cuevas
-    and Tyma Sofolosky to enable researchers to study complex
+    and Tyma Sokolskyi to enable researchers to study complex
     chemistry experiment, specifically, around the problem of
     abiogenesis and chemical evolution.
 

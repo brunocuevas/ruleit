@@ -1,5 +1,6 @@
 import unittest
-from ruleit.expansion import _expansion, probablistic_expansion
+from ruleit.expansion import _expansion, probablistic_expansion, safety_check, iterative_probabilistic_expansion
+from rdkit.Chem import rdChemReactions as rdr
 from yaml import Loader, Dumper, load, dump
 import numpy as np
 
@@ -45,6 +46,45 @@ class TestFactory(unittest.TestCase):
         px = len(list(filter(lambda x: x['rule'] == 'Isomerization', u['discovered-reactions']))) / len(u['discovered-reactions'])
         print("---")
 
+    def test_check_sanity(self):
+        test_set = [
+            (rdr.ReactionFromSmarts('CCC.N>>CCCC(N)O'), True),
+            (rdr.ReactionFromSmarts('CCC.N>>CCCCCCC(C)(=N)O'), False),
+            
+            (rdr.ReactionFromSmarts('CCC.N>>CCCCCC(C)(C)C'), True),
+            (rdr.ReactionFromSmarts('CCC.N>>BrCC(Br)CCCCCC(N)CCCC(Cl)CCCCCCCCCCCC'), False),
+            (rdr.ReactionFromSmarts('CCC.N>>N#CCCCCCC(C)O'), True),
+        ]
+        conditions = dict(
+            mass = 500.0,
+            valence = {
+                "C": [4]
+            }
+        )
+        for r in test_set:
+            self.assertEqual(safety_check(r[0], conditions), r[1])
+
+    def test_probabilistic_capped(self):
+        f = list(map(lambda x: x.strip(), open('tests/seeds.test.txt').readlines()))
+        
+        g = list(map(lambda x: x.strip(), open('tests/reactions.test.txt').readlines()))
+        g = [dict(name='r{:06d}'.format(i), smarts=r) for i, r in enumerate(g)]
+        #g = dict(reactions=g)
+        conditions = dict(
+            mass=500.0,
+            valence=dict(
+                C=[4],
+                N=[3],
+                O=[2]
+            )
+        )
+
+        out = iterative_probabilistic_expansion(
+            seeds=f, reaction_rules=g, iterations=1000, rounds=4,
+            conditions=conditions
+        )
+        self.assertGreater(len(out['reactions']), 1)
+        print(len(out['reactions']))
 
 
 if __name__ == '__main__':
