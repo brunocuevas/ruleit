@@ -1,5 +1,6 @@
 import unittest
 from ruleit.annotate import MoleculeBuffer, annotate_reaction_collection, generate_crn
+from ruleit.hash import hash_molecules, hash_reactions
 import json
 import random
 
@@ -104,6 +105,19 @@ class TestAnnotate(unittest.TestCase):
         # random.shuffle(reactions)
         molecules, links = annotate_reaction_collection(reactions, mb)
         crn = generate_crn(reactions, molecules, links)
+
+    def test_query_name(self):
+        mb = MoleculeBuffer(file="tests/mol-buffer.db")
+        mb.create_table(overwrite=True)
+        u = mb.query_pubchem('caffeine', use='name')
+        self.assertGreater(len(u), 0)
+
+
+    def test_hashes(self):
+
+        self.assertEqual(hash_molecules(smiles='NCC'), hash_molecules(smiles='CCN'))
+        self.assertEqual(hash_molecules(smiles='CCC(N)CC'), hash_molecules(smiles='CCC(CC)N'))
+        self.assertEqual(hash_reactions(smiles='CC.N>>CCN'), hash_reactions(smiles='N.CC>>CCN'))
 
 
 if __name__ == "__main__":
