@@ -40,11 +40,15 @@ if u and v and w and go_for_it:
     w = [line.strip() for line in w.split('\n')]
 
     pruned_hits = filter_hits(reactions=u['reactions'], hits=w)
-    pruned_hits = [p['smiles'] for p in pruned_hits]
-
     st.metric(
         label="Number Hits", value=len(pruned_hits)
     )
+    st.write(pd.DataFrame.from_records(pruned_hits))
+    pruned_hits = [p['smiles'] for p in pruned_hits]
+
+    
+    # pruned_hits_display = [dict(smiles=p) for p in pruned_hits]
+    
 
     status, results = lp_prune(
         reactions=u['reactions'],

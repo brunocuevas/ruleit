@@ -54,6 +54,8 @@ col1, col2, col3 = st.columns(3)
 n_expansions = col1.slider('# expansion iterations', value=4, min_value=1, max_value=5)
 iterations_per_expansion = col2.slider("# number reactions per expansion", min_value=1000, max_value=50000, value=10000, step=1000)
 maximum_mass = col3.slider('maximum mass', value=500, min_value=250, max_value=1000)
+seed = st.text_input('random-seed', value=42)
+np.random.seed(int(seed))
 
 """
 Next, we need the reaction rules. Reaction rules can become quite 'mind-bending', we are aware. That is why we
