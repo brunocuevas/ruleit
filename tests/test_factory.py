@@ -86,6 +86,28 @@ class TestFactory(unittest.TestCase):
         self.assertGreater(len(out['reactions']), 1)
         print(len(out['reactions']))
 
+    def test_example_1(self):
+        f = list(map(lambda x: x.strip(), open('data/example.1.seeds.csv').readlines()))
+        g = list(map(lambda x: x.strip(), open('data/example.1.reactions.csv').readlines()))
+        g = [dict(name='r{:06d}'.format(i), smarts=r) for i, r in enumerate(g)]
+        #g = dict(reactions=g)
+        conditions = dict(
+            mass=500.0,
+            valence=dict(
+                C=[4],
+                N=[3],
+                O=[2]
+            )
+        )
+
+        out = iterative_probabilistic_expansion(
+            seeds=f, reaction_rules=g, iterations=10000, rounds=4,
+            conditions=conditions
+        )
+        self.assertGreater(len(out['reactions']), 1)
+        print(len(out['reactions']))
+
+
 
 if __name__ == '__main__':
     unittest.main()

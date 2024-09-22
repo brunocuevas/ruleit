@@ -6,8 +6,9 @@ from rdkit.Chem.Descriptors import MolWt
 import itertools
 import numpy as np
 from random import shuffle
-
-
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*')
+import rdkit
 
 def cartessian_product(seed_set, n):
     u = [seed_set] * n
@@ -107,7 +108,7 @@ def _prune_molecules(discovered_molecules):
     out.sort(key=len)
     return out
 
-def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1000, conditions=None):
+def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1000, conditions=None, progress_bar_reporter=None):
     """
 
     Performs a probablistic expansion, where the rule_probability parameters
@@ -158,7 +159,10 @@ def probablistic_expansion(seeds, reaction_rules, rule_probability, iterations=1
                 flag = False
         reaction['active'] = flag
 
-    for i in range(iterations):
+    if progress_bar_reporter is None:
+        progress_bar_reporter = lambda x: x
+
+    for i in progress_bar_reporter(range(iterations)):
     
         reaction = np.random.choice(reaction_rules_copy['reactions'], p=rule_probability, size=1)[0]
         chemical_reaction = reaction['reaction_object']
@@ -244,7 +248,10 @@ def iterative_probabilistic_expansion(seeds, reaction_rules, iterations, rounds,
 
 def safety_check(products, conditions):
     for product in products:
-        product = chem.MolFromInchi(chem.MolToInchi(product))
+        try:
+            product = chem.MolFromInchi(chem.MolToInchi(product))
+        except rdkit.Chem.rdchem.KekulizeException:
+            return False
         if product is None:
             return False
         cv = check_valence(product, conditions)
