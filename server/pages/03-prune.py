@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-from ruleit.lp_prune import lp_prune, filter_hits
+from ruleit.lp_prune import lp_prune, filter_hits, extract_molecules
 from pulp import *
 import pandas as pd
 from io import StringIO, BytesIO
@@ -63,6 +63,7 @@ if u and v and w and go_for_it:
         pruned_reactions = results.query('active == True')
         # st.write(pruned_reactions.sample(n=min([25, len(pruned_reactions)])))
         u['reactions'] = pruned_reactions.to_dict(orient='records')
+        u['seeds'] = extract_molecules(u['reactions'])
         st.download_button(
             label="Download results", 
             data=json.dumps(u, indent=4), 
