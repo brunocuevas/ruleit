@@ -4,6 +4,9 @@ from ruleit.annotate import MoleculeBuffer
 import pandas as pd
 from stqdm import stqdm
 
+if 'direction' not in st.session_state:
+    st.session_state['direction'] = True
+
 
 @st.cache_resource()
 def local_buffer():
@@ -18,8 +21,13 @@ Introduce a list of names here, and we will try to map them
 to their smiles through the Pubchem API.
 """
 
+if st.toggle("Invert: Smiles to name"):
+    st.session_state['direction'] = False
 
-names = st.text_area(label="introduce your names here")
+if st.session_state["direction"]:
+    names = st.text_area(label="introduce your {:s} here".format('names'))
+else:
+    names = st.text_area(label="introduce your {:s} here".format('smiles'))
 
 process_button = st.button(label='run')
 
@@ -32,11 +40,16 @@ if process_button and names:
     names = list(map(lambda x: x.strip(), names.split('\n')))
 
     for name in stqdm(names):
-
-        try:
-            u = buffer.query_pubchem(q=name, use='name')[0]
-        except IndexError:
-            continue
+        if st.session_state['direction']:
+            try:
+                u = buffer.query_pubchem(q=name, use='name')[0]
+            except IndexError:
+                continue
+        else:
+            try:
+                u = buffer.query_pubchem(q=name, use='smiles')[0]
+            except IndexError:
+                continue
 
         u['query'] = name
 
