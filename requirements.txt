@@ -101,7 +101,6 @@ rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 rich==13.9.2
 rpds-py==0.20.0
--e file:///Users/brunocuevaszuviria/projects/ruleit
 scipy==1.14.1
 seaborn==0.13.2
 send2trash==1.8.3
