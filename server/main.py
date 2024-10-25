@@ -26,8 +26,9 @@ st.markdown(
     the minimal chemical reaction network.
     4. Explore the results in an interactive and user friendly environment.
 
-    If you have any question, reach us at: 
 
-        brunocuevaszuviria@gmail.com
+    You can also run this server on your own machine. Check the 
+    code at https://github.com/brunocuevas/ruleit
+
     """
 )
