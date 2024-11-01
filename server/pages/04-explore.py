@@ -22,6 +22,11 @@ def local_buffer():
 
 st.title("Rule-It: Explore 😳")
 
+"""
+This page enables you to enrich the output of the previous runs. Be aware that it requires making requests
+to other databases, so it will take a while (or forever) to annotate very big reaction networks.
+"""
+
 data = False
 upload = st.file_uploader(label="upload")
 if upload:

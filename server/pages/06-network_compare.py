@@ -76,6 +76,11 @@ def extract_reaction_attributes(G):
 
 st.title("Rule-It: Compare 😳")
 
+"""
+This tool enables you to compare the output of two different runs (e.g. expansions with two different
+seed sets).
+"""
+
 data = False
 col1, col2 = st.columns(2)
 upload_1 = col1.file_uploader(label="upload-1")

@@ -28,7 +28,9 @@ st.markdown(
 
 
     You can also run this server on your own machine. Check the 
-    code at https://github.com/brunocuevas/ruleit
+    code at https://github.com/brunocuevas/ruleit.
+
+    Check our preprint at https://chemrxiv.org/engage/chemrxiv/article-details/671d306b1fb27ce124b0e6c9
 
     """
 )

@@ -3,7 +3,15 @@ import pandas as pd
 import json
 
 
-st.title("Rule-It: Compare 😳")
+st.title("Rule-It: Json 2 CSV 😳")
+
+
+"""
+
+We like to use JSON files to handle data internally, but it is not very handy for analysis. In this page,
+you can convert the json file to set of csv files, which you can open later in Excel or Spreadsheets.
+
+"""
 
 upload = st.file_uploader(label="upload")
 if upload:

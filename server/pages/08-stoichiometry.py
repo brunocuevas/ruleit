@@ -27,6 +27,11 @@ def generate_stochiometry_dict(reaction):
 
 st.title("Rule-It: Stoichiometry 😳")
 
+"""
+This page allows to convert the outputs of the other pages (´prune´ and ´expand´) into the input of
+an autocatalytic-cycle detection tool, freely available at [https://github.com/vblancoOR/autocatatalyticsubnetworks](https://github.com/vblancoOR/autocatatalyticsubnetworks)
+"""
+
 upload = st.file_uploader(label="upload")
 upload_name = upload.name
 run = st.button('Run')
