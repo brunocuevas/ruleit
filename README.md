@@ -17,4 +17,5 @@ to install Rule-it. To set up a local server run
 
 docker run -p 8501:8501 ruleit
 
-The preprint is at https://chemrxiv.org/engage/chemrxiv/article-details/671d306b1fb27ce124b0e6c9. Please cite as Cuevas-Zuviria, B. & Sokolskyi, T. (2024). Rule-it: an online platform for chemical reaction network explorations for chemical evolution. chemrxiv, doi: 10.26434/chemrxiv-2024-nqwpb![image](https://github.com/user-attachments/assets/52669540-a481-4284-9d4e-7c26033c72cf)
+The preprint is at https://chemrxiv.org/engage/chemrxiv/article-details/671d306b1fb27ce124b0e6c9. Please cite as 
+Cuevas-Zuviria, B. & Sokolskyi, T. (2024). Rule-it: an online platform for chemical reaction network explorations for chemical evolution. chemrxiv, doi: 10.26434/chemrxiv-2024-nqwpb
